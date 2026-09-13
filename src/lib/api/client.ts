@@ -12,7 +12,7 @@ import type { AuthTokenResponse } from "@/types/api/auth";
 import type { ApiFailure, ApiResponse } from "@/types/api/common";
 
 const DEFAULT_LOCAL_API_BASE_URL = "http://127.0.0.1:8080";
-const DEFAULT_PRODUCTION_API_BASE_URL = "https://bubli.n-e.kr";
+const DEFAULT_PRODUCTION_API_BASE_URL = "https://my-bubli.kro.kr";
 const DEFAULT_API_TIMEOUT_MS = 15000;
 const PREVIEW_API_TIMEOUT_MS = 1200;
 const GET_REQUEST_DEDUPE_ENABLED = process.env.NEXT_PUBLIC_BUBLI_API_GET_DEDUPE !== "false";

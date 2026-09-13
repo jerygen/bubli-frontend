@@ -9,7 +9,7 @@ import { TauriRuntimeGates } from "@/lib/tauri/tauri-runtime-gates";
 
 const apiPreconnectOrigin = process.env.NEXT_PUBLIC_API_BASE_URL
   ? new URL(process.env.NEXT_PUBLIC_API_BASE_URL).origin
-  : "https://bubli.n-e.kr";
+  : "https://my-bubli.kro.kr";
 
 export const metadata: Metadata = {
   title: {

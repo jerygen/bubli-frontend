@@ -62,14 +62,13 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.revision.outputs.repository }}:${{ steps.revision.outputs.sha }}
-          # NEXT_PUBLIC_* 변수는 빌드 타임에 번들에 포함됨
-          # GitHub Repository Variables (Settings → Variables → Actions)에 추가 필요
-          # (NEXT_PUBLIC_WS_URL은 Secrets에 등록되어 있어 secrets. 컨텍스트로 읽는다)
+          # NEXT_PUBLIC_* 변수는 빌드 타임에 번들에 포함된다.
+          # 개인 도메인 기본값을 사용하되, Repository Variables로 필요 시 덮어쓴다.
           build-args: |
-            NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL }}
-            NEXT_PUBLIC_APP_BASE_URL=${{ vars.NEXT_PUBLIC_APP_BASE_URL }}
-            NEXT_PUBLIC_TAURI_APP_URL=${{ vars.NEXT_PUBLIC_TAURI_APP_URL }}
-            NEXT_PUBLIC_WS_URL=${{ secrets.NEXT_PUBLIC_WS_URL }}
+            NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://my-bubli.kro.kr' }}
+            NEXT_PUBLIC_APP_BASE_URL=${{ vars.NEXT_PUBLIC_APP_BASE_URL || 'https://my-bubli.kro.kr' }}
+            NEXT_PUBLIC_TAURI_APP_URL=${{ vars.NEXT_PUBLIC_TAURI_APP_URL || 'https://my-bubli.kro.kr/app' }}
+            NEXT_PUBLIC_WS_URL=${{ vars.NEXT_PUBLIC_WS_URL || secrets.NEXT_PUBLIC_WS_URL || 'wss://my-bubli.kro.kr/ws' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -97,8 +96,8 @@ jobs:
             docker pull "$IMAGE@$DIGEST"
             docker tag "$IMAGE@$DIGEST" "$IMAGE:latest"
             cd ~/bubli-backend
-            docker compose -f docker-compose.prod.yml config --quiet
-            docker compose -f docker-compose.prod.yml up -d --no-deps --no-build frontend
+            docker compose --env-file .env.aws -f docker-compose.prod.yml -f docker-compose.aws.yml config --quiet
+            docker compose --env-file .env.aws -f docker-compose.prod.yml -f docker-compose.aws.yml up -d --no-deps --no-build frontend
             test "$(docker inspect --format '{{.State.Running}}' bubli-frontend)" = "true"
-            curl --fail --silent --show-error --retry 6 --retry-connrefused --max-time 10 --resolve bubli.n-e.kr:443:127.0.0.1 https://bubli.n-e.kr/ > /dev/null
+            curl --fail --silent --show-error --retry 6 --retry-connrefused --max-time 10 --resolve my-bubli.kro.kr:443:127.0.0.1 https://my-bubli.kro.kr/ > /dev/null
             docker image prune -f
