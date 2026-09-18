@@ -59,7 +59,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/bubli-frontend:${{ steps.revision.outputs.sha }}
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/bubli-frontend:${{ steps.revision.outputs.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/bubli-frontend:latest
           # NEXT_PUBLIC_* 변수는 빌드 타임에 번들에 포함된다.
           # 개인 도메인 기본값을 사용하되, Repository Variables로 필요 시 덮어쓴다.
           build-args: |
