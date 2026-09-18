@@ -110,9 +110,10 @@ jobs:
             fi
             attempt=1
             while [ "$attempt" -le 12 ]; do
-              if [ "$(docker inspect --format '{{.State.Running}}' bubli-frontend 2>/dev/null || true)" = "true" ] && \
-                curl --fail --silent --show-error --max-time 10 --resolve "$HEALTH_RESOLVE" "$HEALTH_URL" > /dev/null; then
-                break
+              if [ "$(docker inspect --format '{{.State.Running}}' bubli-frontend 2>/dev/null || true)" = "true" ]; then
+                if curl --fail --silent --show-error --max-time 10 --resolve "$HEALTH_RESOLVE" "$HEALTH_URL" > /dev/null; then
+                  break
+                fi
               fi
               if [ "$attempt" -eq 12 ]; then
                 exit 1
