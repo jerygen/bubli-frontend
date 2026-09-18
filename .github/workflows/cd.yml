@@ -103,8 +103,21 @@ jobs:
             docker compose --env-file .env.aws -f docker-compose.prod.yml -f docker-compose.aws.yml up -d --no-deps --no-build frontend
             test "$(docker inspect --format '{{.State.Running}}' bubli-frontend)" = "true"
             if docker exec bubli-certbot test -f /etc/letsencrypt/live/my-bubli.kro.kr/fullchain.pem; then
-              curl --fail --silent --show-error --retry 6 --retry-connrefused --max-time 10 --resolve my-bubli.kro.kr:443:127.0.0.1 https://my-bubli.kro.kr/ > /dev/null
+              HEALTH_URL=https://my-bubli.kro.kr/
+              HEALTH_RESOLVE=my-bubli.kro.kr:443:127.0.0.1
             else
-              curl --fail --silent --show-error --retry 6 --retry-connrefused --max-time 10 --resolve my-bubli.kro.kr:80:127.0.0.1 http://my-bubli.kro.kr/ > /dev/null
+              HEALTH_URL=http://my-bubli.kro.kr/
+              HEALTH_RESOLVE=my-bubli.kro.kr:80:127.0.0.1
             fi
+            attempt=1
+            while [ "$attempt" -le 12 ]; do
+              if curl --fail --silent --show-error --max-time 10 --resolve "$HEALTH_RESOLVE" "$HEALTH_URL" > /dev/null; then
+                break
+              fi
+              if [ "$attempt" -eq 12 ]; then
+                exit 1
+              fi
+              attempt=$((attempt + 1))
+              sleep 5
+            done
             docker image prune -f
