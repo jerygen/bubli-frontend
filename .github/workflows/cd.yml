@@ -108,7 +108,13 @@ jobs:
             attempt=1
             while [ "$attempt" -le 12 ]; do
               if [ "$(docker inspect --format '{{.State.Running}}' bubli-frontend 2>/dev/null || true)" = "true" ]; then
-                if curl --fail --silent --show-error --max-time 10 --resolve "$HEALTH_RESOLVE" "$HEALTH_URL" > /dev/null; then
+                # Next.js가 기동을 끝내기 전에는 Nginx가 잠시 502를 반환할 수 있다.
+                # set -e가 이 일시적 실패를 배포 실패로 처리하지 않도록 상태를 보관한다.
+                set +e
+                curl --fail --silent --show-error --max-time 10 --resolve "$HEALTH_RESOLVE" "$HEALTH_URL" > /dev/null
+                health_status=$?
+                set -e
+                if [ "$health_status" -eq 0 ]; then
                   break
                 fi
               fi
