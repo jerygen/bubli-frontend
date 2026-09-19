@@ -101,13 +101,11 @@ jobs:
             cd ~/bubli-backend
             docker compose --env-file .env.aws -f docker-compose.prod.yml -f docker-compose.aws.yml config --quiet
             docker compose --env-file .env.aws -f docker-compose.prod.yml -f docker-compose.aws.yml up -d --no-deps --no-build frontend
-            if docker exec bubli-certbot test -f /etc/letsencrypt/live/my-bubli.kro.kr/fullchain.pem; then
-              HEALTH_URL=https://my-bubli.kro.kr/
-              HEALTH_RESOLVE=my-bubli.kro.kr:443:127.0.0.1
-            else
-              HEALTH_URL=http://my-bubli.kro.kr/
-              HEALTH_RESOLVE=my-bubli.kro.kr:80:127.0.0.1
-            fi
+            # 프론트 배포 성공 여부는 컨테이너와 Nginx의 HTTP 응답으로만 확인한다.
+            # TLS 인증서 발급은 백엔드 인프라 배포의 별도 단계이므로, 여기서
+            # 인증서 파일을 검사하면 아직 발급되지 않은 정상 상황도 CD 실패가 된다.
+            HEALTH_URL=http://my-bubli.kro.kr/
+            HEALTH_RESOLVE=my-bubli.kro.kr:80:127.0.0.1
             attempt=1
             while [ "$attempt" -le 12 ]; do
               if [ "$(docker inspect --format '{{.State.Running}}' bubli-frontend 2>/dev/null || true)" = "true" ]; then
