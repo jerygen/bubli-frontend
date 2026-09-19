@@ -101,9 +101,8 @@ jobs:
             cd ~/bubli-backend
             docker compose --env-file .env.aws -f docker-compose.prod.yml -f docker-compose.aws.yml config --quiet
             docker compose --env-file .env.aws -f docker-compose.prod.yml -f docker-compose.aws.yml up -d --no-deps --no-build frontend
-            # 프론트 배포 성공 여부는 컨테이너와 Nginx의 HTTP 응답으로만 확인한다.
-            # TLS 인증서 발급은 백엔드 인프라 배포의 별도 단계이므로, 여기서
-            # 인증서 파일을 검사하면 아직 발급되지 않은 정상 상황도 CD 실패가 된다.
+            # 컨테이너 기동 대기는 HTTP로 확인한다. TLS 인증서 파일을 직접
+            # 검사하지 않아 최초 인프라 구성 단계와 프론트 배포를 분리한다.
             HEALTH_URL=http://my-bubli.kro.kr/
             HEALTH_RESOLVE=my-bubli.kro.kr:80:127.0.0.1
             attempt=1
@@ -119,4 +118,9 @@ jobs:
               attempt=$((attempt + 1))
               sleep 5
             done
+            # 최초 TLS 발급은 백엔드 인프라 배포가 담당한다. 발급된 뒤의 프론트
+            # 배포는 실제 공개 HTTPS 엔드포인트까지 검증해 완료로 판정한다.
+            curl --fail --silent --show-error --max-time 10 \
+              --resolve my-bubli.kro.kr:443:127.0.0.1 \
+              https://my-bubli.kro.kr/ > /dev/null
             docker image prune -f
